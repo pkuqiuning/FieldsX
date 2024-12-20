@@ -645,16 +645,16 @@ invf=InvariantTraceTensor[bundle,3,Antisymmetric];
 If[SymmetryGroupOfTensor[tens]===StrongGenSet[{1,2,3},GenSet[-Cycles[{1,2}],-Cycles[{2,3}]]],
 (* f tensor: we replace f_{ijm} f_{klm} by - 4 {{1,3},{2,4}}_{ijkl} (for $StructureConstantSign=I) *)
 invtens=InvariantTraceTensor[bundle,4];
-AppendTo[reps,inject[{invt->invtens},tens[i1___,m_,i2___]tens[j1___,-m_,j2___]:>1/$StructureConstantSign(-1)^(1+Length[{i1}]+Length[{j1}])Module[{inds={i1,i2,j1,j2}},
+AppendTo[reps,inject[{invt->invtens},tens[i1___,m_,i2___]tens[j1___,-m_,j2___]:>I/$StructureConstantSign(-1)^(1+Length[{i1}]+Length[{j1}])Module[{inds={i1,i2,j1,j2}},
 invt@@(inds)-invt@@(inds[[{1,2,4,3}]])-invt@@(inds[[{1,3,4,2}]])+invt@@(inds[[{1,4,3,2}]])]]];
 Continue[];
 ];
 If[SymmetryGroupOfTensor[tens]===StrongGenSet[{1,2,3},GenSet[Cycles[{1,2}],Cycles[{2,3}]]],
 (* d tensor: we replace d_{ijm} f_{klm} by - 4 I {{1,2},{3},{4}}_{ijkl} (for $StructureConstantSign=I) *)
 invtens=InvariantTraceTensor[bundle,4];
-AppendTo[reps,inject[{invt->invtens},tens[i1___,m_,i2___]invf[j1___,-m_,j2___]:>I/$StructureConstantSign(-1)^(1+Length[{j1}])Module[{inds={i1,i2,j1,j2}},
+AppendTo[reps,inject[{invt->invtens},tens[i1___,m_,i2___]invf[j1___,-m_,j2___]:>-1/$StructureConstantSign(-1)^(1+Length[{j1}])Module[{inds={i1,i2,j1,j2}},
 invt@@(inds)-invt@@(inds[[{1,2,4,3}]])+invt@@(inds[[{1,3,4,2}]])-invt@@(inds[[{1,4,3,2}]])]]];
-AppendTo[reps,inject[{invt->invtens},tens[i1___,-m_,i2___]invf[j1___,m_,j2___]:>I/$StructureConstantSign(-1)^(1+Length[{j1}])Module[{inds={i1,i2,j1,j2}},
+AppendTo[reps,inject[{invt->invtens},tens[i1___,-m_,i2___]invf[j1___,m_,j2___]:>-1/$StructureConstantSign(-1)^(1+Length[{j1}])Module[{inds={i1,i2,j1,j2}},
 invt@@(inds)-invt@@(inds[[{1,2,4,3}]])+invt@@(inds[[{1,3,4,2}]])-invt@@(inds[[{1,4,3,2}]])]]];
 Continue[];
 ];
