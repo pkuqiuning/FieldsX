@@ -261,6 +261,7 @@ GammaMatrixQ::usage=usagerow[{"GammaMatrixQ[",it@"expr","] gives True if ",it@"e
 GammaStarQ::usage=usagerow[{"GammaStarQ[",it@"expr","] gives True if ",it@"expr"," is the \!\(\*SubscriptBox[\(\[Gamma]\), \(*\)]\) (chiral) matrix, and False otherwise."}];
 GammaZeroQ::usage=usagerow[{"GammaZeroQ[",it@"expr","] gives True if ",it@"expr"," is the \!\(\*SuperscriptBox[\(\[Gamma]\), \(0\)]\) matrix, and False otherwise."}];
 $GammaStarSign::usage=usagerow[{"$GammaStarSign defines the global sign of the \!\(\*SubscriptBox[\(\[Gamma]\), \(*\)]\) (chiral) matrix. By default it is 1."}];
+$GammaZeroSign::usage=usagerow[{"$GammaZeroSign defines the global sign of the \!\(\*SubscriptBox[\(\[Gamma]\), \(0\)]\) (0-interwinding) matrix. By default it is I."}];
 GammaMatrix::usage=usagerows[{"GammaMatrix[",it@"metric",", ",it@"n","] returns the generalized (totally antisymmetric) \[Gamma] matrix of order ",it@"n"," of the Clifford algebra associated to the metric ",it@"metric","."},{"GammaMatrix[",it@"metric",", Star] returns the \!\(\*SubscriptBox[\(\[Gamma]\), \(*\)]\) (chiral) matrix of the Clifford algebra associated to the metric ",it@"metric","."},{"GammaMatrix[",it@"metric",", Zero] returns the \!\(\*SuperscriptBox[\(\[Gamma]\), \(0\)]\) matrix of the Clifford algebra associated to the metric ",it@"metric","."}];
 MetricOfGammaMatrix::usage=usagerow[{"MetricOfGammaMatrix[",it@"\[Gamma]","] returns the metric associated to the Clifford algebra of ",it@"\[Gamma]","."}];
 $GammaMatrices::usage=usagerow[{"$GammaMatrices is a global variable storing the list of all currently defined \[Gamma] matrices."}];
@@ -1063,6 +1064,8 @@ Protect[GammaMatrixQ,GammaStarQ,GammaZeroQ];
 
 (* ::Input::Initialization:: *)
 $GammaStarSign=1;
+$GammaZeroSign=I;
+
 
 
 (* ::Input::Initialization:: *)
@@ -1167,13 +1170,13 @@ DefTensor[g0@@spininds,man,{PrintAs->"\!\(\*SuperscriptBox[\(\[Gamma]\), \(0\)]\
 AppendTo[$GammaMatrices,g0];
 xUpSetDelayed[cd[_]@g0[__],0];
 xTagSetDelayed[{g0,g0[-k_,k_]},0];
-xTagSetDelayed[{g0,g0[-i_,j_]g0[-j_,k_]},-delta[-i,k]];
+xTagSetDelayed[{g0,g0[-i_,j_]g0[-j_,k_]},$GammaZeroSign^2 delta[-i,k]];
 xUpSet[GammaMatrixQ[g0],True];
 xUpSet[MetricOfGammaMatrix[g0],met];
 (* No Perturbation since it's a fixed matrix, but only if we have no frame bundle (and thus no Lorentz trafos) *)
 If[!FrameBundleQ[fbundle],inject[{gam->g0},xAct`xPert`Private`ExpandPerturbation1[Perturbation[gam[j_,k_],Optional[order_Integer,1]],options___]:=If[order==0,gam[j,k],0]]];
 (* Fix Dagger *)
-inject[{gam->g0},Dagger[gam]^=Function[-gam[-#2,-#1]]];
+inject[{gam->g0},Dagger[gam]^=Function[$GammaZeroSign^2 gam[-#2,-#1]]];
 inject[{gam->g0,rie->g1,tm->sbundle},Dagger[rie]^=Function[Module[{a=DummyIn[tm],b=DummyIn[tm]},gam[-#3,a]rie[#1,-a,b]gam[-b,-#2]]]];
 (* same for frame bundle matrix *)
 If[FrameBundleQ[fbundle],
@@ -1182,11 +1185,11 @@ DefTensor[g0@@spininds,man,{PrintAs->"\!\(\*SuperscriptBox[\(\[Gamma]\), \(0\)]\
 AppendTo[$GammaMatrices,g0];
 xUpSetDelayed[cd[_]@g0[__],0];
 xTagSetDelayed[{g0,g0[-k_,k_]},0];
-xTagSetDelayed[{g0,g0[-i_,j_]g0[-j_,k_]},-delta[-i,k]];
+xTagSetDelayed[{g0,g0[-i_,j_]g0[-j_,k_]},$GammaZeroSign^2 delta[-i,k]];
 xUpSet[GammaMatrixQ[g0],True];
 xUpSet[MetricOfGammaMatrix[g0],eta];
 (* Fix Dagger *)
-inject[{gam->g0},Dagger[gam]^=Function[-gam[-#2,-#1]]];
+inject[{gam->g0},Dagger[gam]^=Function[$GammaZeroSign^2 gam[-#2,-#1]]];
 inject[{gam->g0,rie->gf1,tm->fbundle},Dagger[rie]^=Function[Module[{a=DummyIn[tm],b=DummyIn[tm]},gam[-#3,a]rie[#1,-a,b]gam[-b,-#2]]]];
 ];
 ];
@@ -1201,7 +1204,7 @@ xTagSetDelayed[{gammasym,gammasym[__,-k_,k_]},0];
 xUpSet[GammaMatrixQ[gammasym],True];
 xUpSet[MetricOfGammaMatrix[gammasym],met];
 (* Fix Dagger *)
-If[Not[eucl],inject[{gam->g0,rie->gammasym,tm->sbundle,j->i},Dagger[rie]^=Function[Module[{a=DummyIn[tm],b=DummyIn[tm]},(-1)^j gam[-{##}[[-1]],a]rie@@Join[{##}[[1;;j]],{-a,b}]gam[-b,-{##}[[-2]]]]]]];
+If[Not[eucl],inject[{gam->g0,rie->gammasym,tm->sbundle,j->i},Dagger[rie]^=Function[Module[{a=DummyIn[tm],b=DummyIn[tm]},(-1)^(j (j-1)/2) $GammaZeroSign^(2j-2) gam[-{##}[[-1]],a]rie@@Join[{##}[[1;;j]],{-a,b}]gam[-b,-{##}[[-2]]]]]]];
 (* Perturbation ist just the perturbation of its split form *)
 inject[{gam->gammasym},xAct`xPert`Private`ExpandPerturbation1[Perturbation[gam[indices__],Optional[order_Integer,1]],options___]:=ExpandPerturbation[Perturbation[SplitGammaMatrix[gam[indices],True],order],options]];
 (* tangent \[Gamma] matrices depend on metric or frame field *)
@@ -1225,7 +1228,7 @@ xTagSetDelayed[{gammasym,gammasym[__,-k_,k_]},0];
 xUpSet[GammaMatrixQ[gammasym],True];
 xUpSet[MetricOfGammaMatrix[gammasym],eta];
 (* Fix Dagger *)
-If[Not[eucl],inject[{gam->g0,rie->gammasym,tm->fbundle,j->i},Dagger[rie]^=Function[Module[{a=DummyIn[tm],b=DummyIn[tm]},(-1)^j gam[-{##}[[-1]],a]rie@@Join[{##}[[1;;j]],{-a,b}]gam[-b,-{##}[[-2]]]]]]];
+If[Not[eucl],inject[{gam->g0,rie->gammasym,tm->sbundle,j->i},Dagger[rie]^=Function[Module[{a=DummyIn[tm],b=DummyIn[tm]},(-1)^(j (j-1)/2) $GammaZeroSign^(2j-2) gam[-{##}[[-1]],a]rie@@Join[{##}[[1;;j]],{-a,b}]gam[-b,-{##}[[-2]]]]]]];
 (* Perturbation ist just the perturbation of its split form *)
 inject[{gam->gammasym},xAct`xPert`Private`ExpandPerturbation1[Perturbation[gam[indices__],Optional[order_Integer,1]],options___]:=ExpandPerturbation[Perturbation[SplitGammaMatrix[gam[indices],True],order],options]];
 (* frame \[Gamma] matrices depend on frame metric *)
@@ -1244,6 +1247,7 @@ xTagSetDelayed[{gammasym,gammasym[-k_,k_]},0];
 xTagSetDelayed[{gammasym,gammasym[-l_,j_]gammasym[-j_,k_]},$GammaStarSign^2delta[-l,k]];
 xUpSet[GammaMatrixQ[gammasym],True];
 xUpSet[MetricOfGammaMatrix[gammasym],met];
+inject[{gam->gammasym},Dagger[gam]^=Function[$GammaStarSign^2 gam[-#2,-#1]]];
 (* No Perturbation since it's a fixed matrix, but only if we have no frame bundle (and thus no Lorentz trafos). Otherwise perturbation of split form. *)
 inject[{gam->gammasym},If[!FrameBundleQ[fbundle],xAct`xPert`Private`ExpandPerturbation1[Perturbation[gam[indices__],Optional[order_Integer,1]],options___]:=If[order==0,gam[indices],0],xAct`xPert`Private`ExpandPerturbation1[Perturbation[gam[indices__],Optional[order_Integer,1]],options___]:=ExpandPerturbation[Perturbation[SplitGammaMatrix[gam[indices],False],order],options]]];
 (* same for frame bundle matrix *)
@@ -1256,6 +1260,7 @@ xTagSetDelayed[{gammasym,gammasym[-k_,k_]},0];
 xTagSetDelayed[{gammasym,gammasym[-l_,j_]gammasym[-j_,k_]},$GammaStarSign^2delta[-l,k]];
 xUpSet[GammaMatrixQ[gammasym],True];
 xUpSet[MetricOfGammaMatrix[gammasym],eta];
+inject[{gam->gammasym},Dagger[gam]^=Function[$GammaStarSign^2 gam[-#2,-#1]]];
 inject[{gam->gammasym},xAct`xPert`Private`ExpandPerturbation1[Perturbation[gam[indices__],Optional[order_Integer,1]],options___]:=ExpandPerturbation[Perturbation[SplitGammaMatrix[gam[indices],False],order],options]];
 ];
 ];
@@ -1460,7 +1465,8 @@ gamtbl[[i,j,5]]/.Join[Thread@Rule[gamtbl[[i,j,1]],ainds],Thread@Rule[gamtbl[[i,j
 
 (* ::Input::Initialization:: *)
 JoinGammaMatrices[f_Plus,keep_?BooleanQ]:=Map[JoinGammaMatrices[#,keep]&,f]
-JoinGammaMatrices[f_,keep:(_?BooleanQ):False]:=With[{f2=f//.{x_. ga_?GammaMatrixQ[indsa__,B_,A_]gb_?GammaMatrixQ[indsb__,-A_,C_]/;SameQ@@Map[MetricOfGammaMatrix,{ga,gb}]:>Expand[x If[$PrecomputeGammaMatrixProducts,PrecomputedGammaProduct[{indsa},{indsb},MetricOfGammaMatrix[ga],{B,C}],InternalGammaProduct[{indsa},{indsb},MetricOfGammaMatrix[ga],{B,C}]]]}//.{ga_?GammaStarQ[A_,B_]gb_?GammaMatrixQ[inds__,-B_,C_]gc_?GammaStarQ[-C_,D_]/;SameQ@@Map[MetricOfGammaMatrix,{ga,gb,gc}]:>(-1)^Length@List[inds]$GammaStarSign^2gb[inds,A,D],ga_?GammaStarQ[A_,B_]gb_?GammaZeroQ[-B_,C_]gc_?GammaStarQ[-C_,D_]/;SameQ@@Map[MetricOfGammaMatrix,{ga,gb,gc}]:>-$GammaStarSign^2gb[A,D],ga_?GammaZeroQ[A_,B_]gb_?GammaStarQ[-B_,C_]gc_?GammaZeroQ[-C_,D_]/;SameQ@@Map[MetricOfGammaMatrix,{ga,gb,gc}]:>gb[A,D]}},
+
+JoinGammaMatrices[f_,keep:(_?BooleanQ):False]:=With[{f2=f//.{x_. ga_?GammaMatrixQ[indsa__,B_,A_]gb_?GammaMatrixQ[indsb__,-A_,C_]/;SameQ@@Map[MetricOfGammaMatrix,{ga,gb}]:>Expand[x If[$PrecomputeGammaMatrixProducts,PrecomputedGammaProduct[{indsa},{indsb},MetricOfGammaMatrix[ga],{B,C}],InternalGammaProduct[{indsa},{indsb},MetricOfGammaMatrix[ga],{B,C}]]]}//.{ga_?GammaStarQ[A_,B_]gb_?GammaMatrixQ[inds__,-B_,C_]gc_?GammaStarQ[-C_,D_]/;SameQ@@Map[MetricOfGammaMatrix,{ga,gb,gc}]:>(-1)^Length@List[inds]$GammaStarSign^2gb[inds,A,D],ga_?GammaStarQ[A_,B_]gb_?GammaZeroQ[-B_,C_]gc_?GammaStarQ[-C_,D_]/;SameQ@@Map[MetricOfGammaMatrix,{ga,gb,gc}]:>-$GammaStarSign^2gb[A,D],ga_?GammaZeroQ[A_,B_]gb_?GammaStarQ[-B_,C_]gc_?GammaZeroQ[-C_,D_]/;SameQ@@Map[MetricOfGammaMatrix,{ga,gb,gc}]:>-$GammaZeroSign^2 gb[A,D]}},
 If[keep,f2,f2/.{ga_?GammaMatrixQ[inds__,A_,B_]gb_?GammaStarQ[-B_,C_]/;SameQ@@Map[MetricOfGammaMatrix,{ga,gb}]:>DualGammaMatrix[ga[inds,A,B]]gb[-B,C],ga_?GammaStarQ[A_,B_]gb_?GammaMatrixQ[inds__,-B_,C_]/;SameQ@@Map[MetricOfGammaMatrix,{ga,gb}]:>(-1)^Length@List[inds]DualGammaMatrix[gb[inds,A,B]]ga[-B,C]}]]
 SetNumberOfArguments[JoinGammaMatrices,{1,2}];
 Protect[JoinGammaMatrices];
@@ -1656,12 +1662,12 @@ If[pns,Unprotect[head];Unprotect[bar]];
 If[eucl,xAct`xTensor`Private`SetDaggerPair[head,bar],
 g0=GammaMatrix[met,Zero];
 If[TrueQ@conj,
-inject[{dto->head,dtobar->bar,barpa->g0,st->sbundle},Dagger[dtobar]^=Function[Module[{a=DummyIn[st]},I dto@@Append[{##}[[1;;-2]],a]barpa[-a,-Last@{##}]]];
-Dagger[dto]^=Function[Module[{a=DummyIn[st]},I barpa[-Last@{##},a] dtobar@@Append[{##}[[1;;-2]],-a]]];
+inject[{dto->head,dtobar->bar,barpa->g0,st->sbundle},Dagger[dtobar]^=Function[Module[{a=DummyIn[st]},$GammaZeroSign dto@@Append[{##}[[1;;-2]],a]barpa[-a,-Last@{##}]]];
+Dagger[dto]^=Function[Module[{a=DummyIn[st]},$GammaZeroSign barpa[-Last@{##},a] dtobar@@Append[{##}[[1;;-2]],-a]]];
 ];
 ,
-inject[{dto->head,dtobar->bar,barpa->g0,st->sbundle},Dagger[dto]^=Function[Module[{a=DummyIn[st]},I dtobar@@Append[{##}[[1;;-2]],a]barpa[-a,-Last@{##}]]];
-Dagger[dtobar]^=Function[Module[{a=DummyIn[st]},I barpa[-Last@{##},a] dto@@Append[{##}[[1;;-2]],-a]]];
+inject[{dto->head,dtobar->bar,barpa->g0,st->sbundle},Dagger[dto]^=Function[Module[{a=DummyIn[st]},$GammaZeroSign dtobar@@Append[{##}[[1;;-2]],a]barpa[-a,-Last@{##}]]];
+Dagger[dtobar]^=Function[Module[{a=DummyIn[st]},$GammaZeroSign barpa[-Last@{##},a] dto@@Append[{##}[[1;;-2]],-a]]];
 ];
 ];
 ];
